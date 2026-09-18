@@ -1,6 +1,6 @@
-package se.iths.richard;
+package se.zodiakengine.richard;
 
-import se.iths.richard.GameInnards.Window;
+import se.zodiakengine.richard.GameInnards.Window;
 
 public class Main {
     static void main() {

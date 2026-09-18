@@ -1,4 +1,4 @@
-package se.iths.richard.GameInnards;
+package se.zodiakengine.richard.GameInnards;
 
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -6,6 +6,7 @@ import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
+import se.zodiakengine.richard.Utils.Time;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
@@ -15,6 +16,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
     private static Window window = null;
+    private static Scene currentScene;
     private final float a;
     private float r;
     private float g;
@@ -27,7 +29,6 @@ public class Window {
     private int fps = 0;
     private int frames = 0;
 
-
     private Window() {
         this.width = 2560;
         this.height = 1440;
@@ -36,6 +37,19 @@ public class Window {
         g = 0.5f;
         b = 0.95f;
         a = 1;
+    }
+
+    public static void changeScene(int newScene) {
+        switch (newScene) {
+            case 0:
+                currentScene = new LevelEditorScene();
+                break;
+            case 1:
+                currentScene = new LevelScene();
+                break;
+            default:
+                assert false : "Unknown scene \"" + newScene + "\"";
+        }
     }
 
     public static Window get() {
@@ -142,13 +156,14 @@ public class Window {
 
 
     public void loop() {
+        float beginTime = Time.getTime();
+        float endTime = Time.getTime();
+
         while (!glfwWindowShouldClose(glfwWindow)) {
             // poll events
             glfwPollEvents();
 
-            r = MouseListener.getX() / width;
-            g = MouseListener.getY() / height;
-            b = 1.0f - r;
+            //rgbScreen();
 
             glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -182,6 +197,16 @@ public class Window {
 
 
             glfwSwapBuffers(glfwWindow);
+            endTime = Time.getTime();
+
+            float deltaTime = endTime - beginTime;
+            beginTime = endTime;
         }
+    }
+
+    private void rgbScreen() {
+        r = MouseListener.getX() / width;
+        g = MouseListener.getY() / height;
+        b = 1.0f - r;
     }
 }

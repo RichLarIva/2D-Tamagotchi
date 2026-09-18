@@ -1,13 +1,13 @@
-package se.iths.richard.GameInnards;
+package se.zodiakengine.richard.GameInnards;
 
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
 
 public class MouseListener {
     private static MouseListener instance;
+    private final boolean[] mouseButtonPressed = new boolean[3];
     private double scrollX, scrollY;
     private double xPos, yPos, lastY, lastX;
-    private boolean[] mouseButtonPressed = new boolean[3];
     private boolean isDragging;
 
     private MouseListener() {
@@ -87,7 +87,7 @@ public class MouseListener {
     }
 
     public static boolean mouseButtonDown(int button) {
-        if(button < get().mouseButtonPressed.length)
+        if (button < get().mouseButtonPressed.length)
             return get().mouseButtonPressed[button];
         else
             return false;

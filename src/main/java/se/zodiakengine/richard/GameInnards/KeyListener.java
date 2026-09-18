@@ -1,4 +1,4 @@
-package se.iths.richard.GameInnards;
+package se.zodiakengine.richard.GameInnards;
 
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
