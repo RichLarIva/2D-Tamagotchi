@@ -1,9 +1,10 @@
-package se.iths.richard;
+package se.iths.richard.GameInnards;
 
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
+import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
@@ -56,42 +57,49 @@ public class Window {
 
         init();
         loop();
+
+        // Free the memory
+        glfwFreeCallbacks(glfwWindow);
+        glfwDestroyWindow(glfwWindow);
+
+        // Terminate GLFW and free the error callback
+        glfwTerminate();
+        glfwSetErrorCallback(null).free();
     }
 
     public void init() {
-        // setup an error callback
         GLFWErrorCallback.createPrint(System.err).set();
 
-        // Initialize GLFW
+        // Force X11 backend to avoid Wayland/libdecor crashes
+        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+
         if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW!");
 
+        glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
+        glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
+        glfwSetScrollCallback(glfwWindow, MouseListener::mouseScrollCallback);
 
         glfwDefaultWindowHints();
-
         glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 
-        // OpenGL 3.3
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        glfwWindow = glfwCreateWindow(this.width, this.height, this.title, NULL, NULL);
-        if (glfwWindow == NULL) {
+        glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
+        if (glfwWindow == NULL)
             throw new IllegalStateException("Failed to create the GLFW window.");
-        }
 
-        // Make the OpenGL context current
         glfwMakeContextCurrent(glfwWindow);
-        // enable vsync
         glfwSwapInterval(1);
-
         glfwShowWindow(glfwWindow);
 
         GL.createCapabilities();
     }
+
 
     public void loop() {
         while (!glfwWindowShouldClose(glfwWindow)) {
