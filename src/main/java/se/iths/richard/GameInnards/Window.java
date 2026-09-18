@@ -2,23 +2,40 @@ package se.iths.richard.GameInnards;
 
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.nanovg.NVGColor;
+import org.lwjgl.nanovg.NanoVG;
+import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.nanovg.NanoVG.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
     private static Window window = null;
+    private final float a;
+    private float r;
+    private float g;
+    private float b;
     private int width, height;
     private String title;
     private long glfwWindow;
+    private long vg;
+    private double lastTime = System.currentTimeMillis();
+    private int fps = 0;
+    private int frames = 0;
+
 
     private Window() {
         this.width = 2560;
         this.height = 1440;
         this.title = "Best Tamogotchi 2D";
+        r = 0.1f;
+        g = 0.5f;
+        b = 0.95f;
+        a = 1;
     }
 
     public static Window get() {
@@ -76,14 +93,13 @@ public class Window {
         if (!glfwInit())
             throw new IllegalStateException("Unable to initialize GLFW!");
 
-        glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
-        glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
-        glfwSetScrollCallback(glfwWindow, MouseListener::mouseScrollCallback);
 
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+
+        glfwWindowHint(GLFW_STENCIL_BITS, 8);
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -93,11 +109,35 @@ public class Window {
         if (glfwWindow == NULL)
             throw new IllegalStateException("Failed to create the GLFW window.");
 
+        glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
+        glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
+        glfwSetScrollCallback(glfwWindow, MouseListener::mouseScrollCallback);
+        glfwSetKeyCallback(glfwWindow, KeyListener::keyCallback);
+
         glfwMakeContextCurrent(glfwWindow);
-        glfwSwapInterval(1);
+        glfwSwapInterval(0);
         glfwShowWindow(glfwWindow);
 
         GL.createCapabilities();
+
+        vg = NanoVGGL3.nvgCreate(
+                NanoVGGL3.NVG_ANTIALIAS |
+                        NanoVGGL3.NVG_STENCIL_STROKES
+        );
+
+        if (vg == NULL)
+            throw new RuntimeException("Failed to create NanoVG context");
+
+        // Load font
+        int font = NanoVG.nvgCreateFont(vg, "mono", "/mnt/DATA/2D Tamagotchi/src/main/resources/fonts/Comic Sans MS.ttf");
+        if (font == -1)
+            throw new RuntimeException("Failed to load font");
+
+
+        nvgEndFrame(vg);
+
+        glfwSwapBuffers(glfwWindow);
+
     }
 
 
@@ -106,8 +146,40 @@ public class Window {
             // poll events
             glfwPollEvents();
 
-            glClearColor(0.0f, 0.5f, 1.0f, 1.0f);
+            r = MouseListener.getX() / width;
+            g = MouseListener.getY() / height;
+            b = 1.0f - r;
+
+            glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT);
+
+            double currentTime = System.currentTimeMillis();
+            frames++;
+
+            if (currentTime - lastTime >= 1000) {
+                fps = frames;
+                frames = 0;
+                lastTime = currentTime;
+
+            }
+
+            nvgBeginFrame(vg, width, height, 1);
+
+            nvgFontSize(vg, 48f);
+            nvgFontFace(vg, "mono");
+
+            NVGColor color = NVGColor.create();
+            color.r(1f).g(1f).b(1f).a(1f);
+
+            nvgFillColor(vg, color);
+
+            nvgText(vg, 0, 100, "FPS: " + fps);
+
+            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE))
+                nvgText(vg, 100, 100, "SPACE KEY PRESSED");
+
+            nvgEndFrame(vg);
+
 
             glfwSwapBuffers(glfwWindow);
         }
