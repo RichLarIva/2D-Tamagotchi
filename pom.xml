@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -10,20 +10,23 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
+        <!-- Java -->
         <maven.compiler.source>26</maven.compiler.source>
         <maven.compiler.target>26</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- LWJGL version -->
+        <!-- LWJGL -->
         <lwjgl.version>3.4.3</lwjgl.version>
-
-        <!-- Select platform: natives-linux, natives-windows, natives-macos -->
-        <lwjgl.natives>natives-linux</lwjgl.natives>
     </properties>
 
-    <!-- LWJGL BOM (manages all versions automatically) -->
+
+    <!-- ========================================================= -->
+    <!-- LWJGL BOM                                                 -->
+    <!-- ========================================================= -->
+
     <dependencyManagement>
         <dependencies>
+
             <dependency>
                 <groupId>org.lwjgl</groupId>
                 <artifactId>lwjgl-bom</artifactId>
@@ -31,80 +34,219 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 
+
+    <!-- ========================================================= -->
+    <!-- LWJGL JAVA DEPENDENCIES                                   -->
+    <!-- ========================================================= -->
+
     <dependencies>
 
-        <!-- Core LWJGL modules -->
+        <!-- LWJGL core -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl</artifactId>
         </dependency>
+
+        <!-- GLFW - windows/input -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-glfw</artifactId>
         </dependency>
+
+        <!-- OpenGL -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-opengl</artifactId>
         </dependency>
+
+        <!-- OpenAL - audio -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-openal</artifactId>
         </dependency>
+
+        <!-- STB - images/fonts/etc -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-stb</artifactId>
         </dependency>
+
+        <!-- Assimp - 3D model loading -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-assimp</artifactId>
         </dependency>
 
-        <!-- Native libraries (Linux in your case) -->
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-glfw</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-opengl</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-openal</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
+        <!-- NanoVG - vector graphics -->
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-nanovg</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-nanovg</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-stb</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-assimp</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
         </dependency>
 
     </dependencies>
+
+
+    <!-- ========================================================= -->
+    <!-- PLATFORM-SPECIFIC NATIVE LIBRARIES                       -->
+    <!-- ========================================================= -->
+
+    <profiles>
+
+
+        <!-- ===================================================== -->
+        <!-- WINDOWS                                               -->
+        <!-- ===================================================== -->
+
+        <profile>
+            <id>windows</id>
+
+            <activation>
+                <os>
+                    <family>Windows</family>
+                </os>
+            </activation>
+
+            <dependencies>
+
+                <!-- LWJGL -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- GLFW -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-glfw</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- OpenGL -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-opengl</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- OpenAL -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-openal</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- STB -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-stb</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- Assimp -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-assimp</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- NanoVG -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-nanovg</artifactId>
+                    <classifier>natives-windows</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+            </dependencies>
+        </profile>
+
+
+        <!-- ===================================================== -->
+        <!-- LINUX                                                 -->
+        <!-- ===================================================== -->
+
+        <profile>
+            <id>linux</id>
+
+            <activation>
+                <os>
+                    <family>unix</family>
+                </os>
+            </activation>
+
+            <dependencies>
+
+                <!-- LWJGL -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- GLFW -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-glfw</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- OpenGL -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-opengl</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- OpenAL -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-openal</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- STB -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-stb</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- Assimp -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-assimp</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+                <!-- NanoVG -->
+                <dependency>
+                    <groupId>org.lwjgl</groupId>
+                    <artifactId>lwjgl-nanovg</artifactId>
+                    <classifier>natives-linux</classifier>
+                    <scope>runtime</scope>
+                </dependency>
+
+            </dependencies>
+        </profile>
+
+
+    </profiles>
 
 </project>

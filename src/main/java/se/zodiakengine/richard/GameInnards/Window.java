@@ -6,6 +6,7 @@ import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
+import se.zodiakengine.richard.Tamagotchi.Tamagotchi;
 import se.zodiakengine.richard.Utils.Time;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -28,19 +29,21 @@ public class Window {
     private double lastTime = System.currentTimeMillis();
     private int fps = 0;
     private int frames = 0;
+    private Tamagotchi playerTamagotchi;
 
     private Window() {
-        this.width = 2560;
-        this.height = 1440;
+        this.width = 1920;
+        this.height = 1200;
         this.title = "Best Tamogotchi 2D";
-        r = 0.1f;
-        g = 0.5f;
-        b = 0.95f;
+        r = 0.0f;
+        g = 0.0f;
+        b = 0.0f;
         a = 1;
     }
 
     public static void changeScene(int newScene) {
-        switch (newScene) {
+        switch (newScene)
+        {
             case 0:
                 currentScene = new LevelEditorScene();
                 break;
@@ -54,7 +57,9 @@ public class Window {
 
     public static Window get() {
         if (Window.window == null)
+        {
             Window.window = new Window();
+        }
 
         return Window.window;
     }
@@ -101,12 +106,12 @@ public class Window {
     public void init() {
         GLFWErrorCallback.createPrint(System.err).set();
 
-        // Force X11 backend to avoid Wayland/libdecor crashes
-        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
-
+        // Let GLFW automatically select the correct platform
+        // (Windows on Windows, X11/Wayland on Linux).
         if (!glfwInit())
+        {
             throw new IllegalStateException("Unable to initialize GLFW!");
-
+        }
 
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
@@ -119,9 +124,14 @@ public class Window {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+
         glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
+
         if (glfwWindow == NULL)
+        {
             throw new IllegalStateException("Failed to create the GLFW window.");
+        }
+
 
         glfwSetCursorPosCallback(glfwWindow, MouseListener::mousePosCallback);
         glfwSetMouseButtonCallback(glfwWindow, MouseListener::mouseButtonCallback);
@@ -129,6 +139,7 @@ public class Window {
         glfwSetKeyCallback(glfwWindow, KeyListener::keyCallback);
 
         glfwMakeContextCurrent(glfwWindow);
+        // vsync
         glfwSwapInterval(0);
         glfwShowWindow(glfwWindow);
 
@@ -140,17 +151,58 @@ public class Window {
         );
 
         if (vg == NULL)
+        {
             throw new RuntimeException("Failed to create NanoVG context");
+        }
 
         // Load font
-        int font = NanoVG.nvgCreateFont(vg, "mono", "/mnt/DATA/2D Tamagotchi/src/main/resources/fonts/Comic Sans MS.ttf");
-        if (font == -1)
-            throw new RuntimeException("Failed to load font");
+        try (var inputStream = getClass().getResourceAsStream("/fonts/Comic Sans MS.ttf"))
+        {
 
+            if (inputStream == null)
+            {
+                throw new RuntimeException("Font not found: /fonts/Comic Sans MS.ttf");
+            }
 
+            var tempFont = java.nio.file.Files.createTempFile("font-", ".ttf");
+
+            java.nio.file.Files.copy(
+                    inputStream,
+                    tempFont,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING
+            );
+
+            int font = NanoVG.nvgCreateFont(
+                    vg,
+                    "mono",
+                    tempFont.toAbsolutePath().toString()
+            );
+
+            if (font == -1)
+            {
+                throw new RuntimeException("Failed to load font");
+            }
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
         nvgEndFrame(vg);
+        int[] windowWidth = new int[1];
+        int[] windowHeight = new int[1];
+
+        glfwGetFramebufferSize(glfwWindow, windowWidth, windowHeight);
+
+        width = windowWidth[0];
+        height = windowHeight[0];
+
+        glfwSetFramebufferSizeCallback(glfwWindow, (window, newWidth, newHeight) -> {
+            width = newWidth;
+            height = newHeight;
+        });
 
         glfwSwapBuffers(glfwWindow);
+        playerTamagotchi = new Tamagotchi("Felix");
 
     }
 
@@ -158,10 +210,19 @@ public class Window {
     public void loop() {
         float beginTime = Time.getTime();
         float endTime = Time.getTime();
+        String test = "";
+        int previousKey = -1;
+        int switchVsync = 0;
+        NVGColor color = NVGColor.create();
+        color.r(0f).g(1f).b(0f).a(1f);
+        float x = width / 2;
+        float y = height / 2;
 
-        while (!glfwWindowShouldClose(glfwWindow)) {
+        while (!glfwWindowShouldClose(glfwWindow))
+        {
             // poll events
             glfwPollEvents();
+
 
             //rgbScreen();
 
@@ -171,7 +232,8 @@ public class Window {
             double currentTime = System.currentTimeMillis();
             frames++;
 
-            if (currentTime - lastTime >= 1000) {
+            if (currentTime - lastTime >= 1000)
+            {
                 fps = frames;
                 frames = 0;
                 lastTime = currentTime;
@@ -183,15 +245,96 @@ public class Window {
             nvgFontSize(vg, 48f);
             nvgFontFace(vg, "mono");
 
-            NVGColor color = NVGColor.create();
-            color.r(1f).g(1f).b(1f).a(1f);
 
             nvgFillColor(vg, color);
 
             nvgText(vg, 0, 100, "FPS: " + fps);
+            nvgText(vg, 0, 1000, "WIDTH: " + width + "Height:" + height);
+
 
             if (KeyListener.isKeyPressed(GLFW_KEY_SPACE))
+            {
                 nvgText(vg, 100, 100, "SPACE KEY PRESSED");
+            }
+
+            if (KeyListener.isKeyPressed(GLFW_KEY_F5))
+            {
+                if (switchVsync == 0)
+                {
+                    glfwSwapInterval(1);
+                    switchVsync = 1;
+                    nvgText(vg, 800, 100, "VSYNC ON");
+                }
+
+            }
+            else if (KeyListener.isKeyPressed(GLFW_KEY_F6))
+            {
+
+                if (switchVsync == 1)
+                {
+                    glfwSwapInterval(0);
+                    switchVsync = 0;
+                    nvgText(vg, 800, 100, "VSYNC OFF");
+                }
+            }
+
+
+//            int key = KeyListener.getKeyPressed();
+//
+//            if(key != -1 && key != previousKey)
+//            {
+//                test += (char) key;
+//            }
+//
+//            previousKey = key;
+            if (playerTamagotchi.getFullLevel() > 0 && playerTamagotchi.getFunLevel() > -5)
+            {
+                nvgText(vg, 0, 600, playerTamagotchi.toString());
+                switch (KeyListener.getKeyPressed())
+                {
+                    case GLFW_KEY_1:
+                        playerTamagotchi.increaseFun();
+                        break;
+                    case GLFW_KEY_2:
+                        playerTamagotchi.increaseFullness();
+                        break;
+                }
+            }
+            else
+            {
+                color.r(1f).g(0f).b(0f).a(1f);
+                nvgText(vg, 600, 600, playerTamagotchi.getName() + " DIED");
+            }
+
+            if (KeyListener.isKeyPressed(GLFW_KEY_UP))
+            {
+                y -= 0.5f;
+            }
+            if (KeyListener.isKeyPressed(GLFW_KEY_DOWN))
+            {
+                y += 0.5f;
+            }
+
+            if (KeyListener.isKeyPressed(GLFW_KEY_RIGHT))
+            {
+                x += 0.5f;
+            }
+            if (KeyListener.isKeyPressed(GLFW_KEY_LEFT))
+            {
+                x -= 0.5f;
+            }
+            x = Math.clamp(x, 0, width - 200f);
+            y = Math.clamp(y, 0, height - 200f);
+
+            drawTamagotchi(x, y);
+            nvgText(vg, 0, 900, test);
+            if (KeyListener.isKeyPressed(GLFW_KEY_F2))
+            {
+                test = "";
+            }
+
+
+            nvgText(vg, 900, 50, "X:" + x + " Y:" + y);
 
             nvgEndFrame(vg);
 
@@ -201,6 +344,12 @@ public class Window {
 
             float deltaTime = endTime - beginTime;
             beginTime = endTime;
+            KeyListener.endFrame();
+            if (KeyListener.isKeyPressed(GLFW_KEY_5))
+            {
+                glfwWindowShouldClose(glfwWindow);
+                glfwDestroyWindow(glfwWindow);
+            }
         }
     }
 
@@ -208,5 +357,20 @@ public class Window {
         r = MouseListener.getX() / width;
         g = MouseListener.getY() / height;
         b = 1.0f - r;
+    }
+
+    private void drawTamagotchi(float x, float y) {
+        nvgBeginPath(vg);
+
+        nvgRect(vg, x, y, 200, 200);
+
+        NVGColor color = NVGColor.create()
+                .r(1.0f)
+                .g(0.5f)
+                .b(0.2f)
+                .a(1.0f);
+
+        nvgFillColor(vg, color);
+        nvgFill(vg);
     }
 }
