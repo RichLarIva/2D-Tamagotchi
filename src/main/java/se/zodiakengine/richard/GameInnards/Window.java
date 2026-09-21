@@ -326,7 +326,9 @@ public class Window {
             x = Math.clamp(x, 0, width - 200f);
             y = Math.clamp(y, 0, height - 200f);
 
+
             drawTamagotchi(x, y);
+
             nvgText(vg, 0, 900, test);
             if (KeyListener.isKeyPressed(GLFW_KEY_F2))
             {
@@ -343,6 +345,10 @@ public class Window {
             endTime = Time.getTime();
 
             float deltaTime = endTime - beginTime;
+            if (y != 929)
+            {
+                y -= -9.81f * deltaTime * 20;
+            }
             beginTime = endTime;
             KeyListener.endFrame();
             if (KeyListener.isKeyPressed(GLFW_KEY_5))
