@@ -2,6 +2,7 @@ package se.zodiakengine.richard.Tamagotchi;
 
 public class Tamagotchi {
     private final String name;
+    private final int tiredLevel;
     private int fullLevel;
     private int funLevel;
 
@@ -9,6 +10,8 @@ public class Tamagotchi {
         this.name = name;
         this.fullLevel = 10;
         this.funLevel = 10;
+        this.tiredLevel = 0;
+
     }
 
     public int getFullLevel() {

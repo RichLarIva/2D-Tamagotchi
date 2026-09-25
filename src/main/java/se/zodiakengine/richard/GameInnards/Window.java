@@ -30,6 +30,8 @@ public class Window {
     private int fps = 0;
     private int frames = 0;
     private Tamagotchi playerTamagotchi;
+    private int dvdCornerHits = 0;
+    private boolean wasInCorner = false;
 
     private Window() {
         this.width = 1920;
@@ -206,6 +208,21 @@ public class Window {
 
     }
 
+    private void checkCornerHit(float x, float y) {
+        boolean inCorner =
+                (x <= 0 && y <= 0) || // top-left
+                        (x + 100 >= width && y <= 0) || // top-right
+                        (x <= 0 && y + 100 >= height) || // bottom-left
+                        (x + 100 >= width && y + 100 >= height); // bottom-right
+
+        if (inCorner && !wasInCorner)
+        {
+            dvdCornerHits++;
+            System.out.println("DVD corner hits: " + dvdCornerHits);
+        }
+
+        wasInCorner = inCorner;
+    }
 
     public void loop() {
         float beginTime = Time.getTime();
@@ -215,8 +232,12 @@ public class Window {
         int switchVsync = 0;
         NVGColor color = NVGColor.create();
         color.r(0f).g(1f).b(0f).a(1f);
-        float x = width / 2;
-        float y = height / 2;
+        float tamaX = width / 2;
+        float tamaY = height / 2;
+        int bc = 5;
+        float x2 = width / 2;
+        float y2 = height / 2;
+        float dx = 260, dy = 260;
 
         while (!glfwWindowShouldClose(glfwWindow))
         {
@@ -240,6 +261,7 @@ public class Window {
 
             }
 
+
             nvgBeginFrame(vg, width, height, 1);
 
             nvgFontSize(vg, 48f);
@@ -250,7 +272,7 @@ public class Window {
 
             nvgText(vg, 0, 100, "FPS: " + fps);
             nvgText(vg, 0, 1000, "WIDTH: " + width + "Height:" + height);
-
+            nvgText(vg, width / 2, 200, "Corner Hits: " + dvdCornerHits);
 
             if (KeyListener.isKeyPressed(GLFW_KEY_SPACE))
             {
@@ -279,6 +301,13 @@ public class Window {
             }
 
 
+            drawDVDLOGO(x2, y2);
+
+
+            bc += bc << 5;
+            nvgText(vg, 600, 900, "" + bc);
+
+
 //            int key = KeyListener.getKeyPressed();
 //
 //            if(key != -1 && key != previousKey)
@@ -289,7 +318,8 @@ public class Window {
 //            previousKey = key;
             if (playerTamagotchi.getFullLevel() > 0 && playerTamagotchi.getFunLevel() > -5)
             {
-                nvgText(vg, 0, 600, playerTamagotchi.toString());
+
+                nvgTextBox(vg, 250, 600, width - 2 * 20, playerTamagotchi.toString() + "\nHäst");
                 switch (KeyListener.getKeyPressed())
                 {
                     case GLFW_KEY_1:
@@ -303,31 +333,40 @@ public class Window {
             else
             {
                 color.r(1f).g(0f).b(0f).a(1f);
-                nvgText(vg, 600, 600, playerTamagotchi.getName() + " DIED");
+                if (playerTamagotchi.getFunLevel() <= -5)
+                {
+                    nvgText(vg, 600, 600, playerTamagotchi.getName() + " SUICIDED");
+                }
+                else
+                {
+                    nvgText(vg, 600, 600, playerTamagotchi.getName() + " DIED");
+                }
             }
 
             if (KeyListener.isKeyPressed(GLFW_KEY_UP))
             {
-                y -= 0.5f;
+                tamaY -= 0.5f;
             }
             if (KeyListener.isKeyPressed(GLFW_KEY_DOWN))
             {
-                y += 0.5f;
+                tamaY += 0.5f;
             }
 
             if (KeyListener.isKeyPressed(GLFW_KEY_RIGHT))
             {
-                x += 0.5f;
+                tamaX += 0.5f;
             }
             if (KeyListener.isKeyPressed(GLFW_KEY_LEFT))
             {
-                x -= 0.5f;
+                tamaX -= 0.5f;
             }
-            x = Math.clamp(x, 0, width - 200f);
-            y = Math.clamp(y, 0, height - 200f);
+            tamaX = Math.clamp(tamaX, 0, width - 200f);
+            tamaY = Math.clamp(tamaY, 0, height - 200f);
 
+            x2 = Math.clamp(x2, 0, width - 100f);
+            y2 = Math.clamp(y2, 0, height - 100f);
 
-            drawTamagotchi(x, y);
+            drawTamagotchi(tamaX, tamaY);
 
             nvgText(vg, 0, 900, test);
             if (KeyListener.isKeyPressed(GLFW_KEY_F2))
@@ -335,8 +374,7 @@ public class Window {
                 test = "";
             }
 
-
-            nvgText(vg, 900, 50, "X:" + x + " Y:" + y);
+            nvgText(vg, 900, 50, "X:" + tamaX + " Y:" + tamaY);
 
             nvgEndFrame(vg);
 
@@ -345,9 +383,72 @@ public class Window {
             endTime = Time.getTime();
 
             float deltaTime = endTime - beginTime;
-            if (y != 929)
+
+
+            x2 += dx * deltaTime;
+            y2 += dy * deltaTime;
+
+            if (x2 <= 0)
             {
-                y -= -9.81f * deltaTime * 20;
+                dx *= -1;
+                x2 = 0;
+            }
+            else if (x2 + 100f >= width)
+            {
+                dx *= -1;
+                x2 = width - 100f;
+            }
+            if (y2 <= 0)
+            {
+                dy *= -1;
+                y2 = 0;
+            }
+            else if (y2 + 100f >= height)
+            {
+                y2 = height - 100f;
+                dy *= -1f;
+            }
+
+            checkCornerHit(x2, y2);
+
+
+            boolean isColliding = (x2 < tamaX + 200 && x2 + 100 > tamaX) &&
+                    (y2 < tamaY + 200 && y2 + 100 > tamaY);
+
+            if (isColliding)
+            {
+                float overlapLeft = (x2 + 100) - tamaX;
+                float overlapRight = (tamaX + 200) - x2;
+                float overlapTop = (y2 + 100) - tamaY;
+                float overlapBottom = (tamaY + 200) - y2;
+
+                float minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));
+
+                if (minOverlap == overlapLeft)
+                {
+                    x2 = tamaX - 100;
+                    dx = -Math.abs(dx);
+                }
+                else if (minOverlap == overlapRight)
+                {
+                    x2 = tamaX + 200; // Push out of collision
+                    dx = Math.abs(dx);      // Bounce right
+                }
+                else if (minOverlap == overlapTop)
+                {
+                    y2 = tamaY - 100;
+                    dy = -Math.abs(dy);
+                }
+                else if (minOverlap == overlapBottom)
+                {
+                    y2 = tamaY + 200;
+                    dy = Math.abs(dy);
+                }
+            }
+
+            if (tamaY != 929)
+            {
+                tamaY -= -9.81f * deltaTime * 20;
             }
             beginTime = endTime;
             KeyListener.endFrame();
@@ -375,6 +476,16 @@ public class Window {
                 .g(0.5f)
                 .b(0.2f)
                 .a(1.0f);
+
+        nvgFillColor(vg, color);
+        nvgFill(vg);
+    }
+
+    private void drawDVDLOGO(float x, float y) {
+        nvgBeginPath(vg);
+        nvgRect(vg, x, y, 100, 100);
+
+        NVGColor color = NVGColor.create().r(0.0f).g(1).b(0).a(0.95f);
 
         nvgFillColor(vg, color);
         nvgFill(vg);
