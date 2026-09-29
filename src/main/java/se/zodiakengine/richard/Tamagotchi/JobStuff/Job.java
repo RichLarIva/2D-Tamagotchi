@@ -1,4 +1,4 @@
-package se.zodiakengine.richard.Tamagotchi.jobstuff;
+package se.zodiakengine.richard.Tamagotchi.JobStuff;
 
 public enum Job {
     UNEMPLOYED("Unemployed", 0, JobType.UNEMPLOYED),

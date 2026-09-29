@@ -2,6 +2,7 @@ package se.zodiakengine.richard.Tamagotchi;
 
 public class Tamagotchi {
     private final String name;
+
     private final int tiredLevel;
     private int fullLevel;
     private int funLevel;
