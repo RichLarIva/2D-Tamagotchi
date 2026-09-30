@@ -7,7 +7,10 @@ public enum Job {
     PIZZA_DELIVERY_DRIVER("Pizza Delivery Driver", 5, JobType.REAL),
     BARISTA("Barista", 3, JobType.REAL),
 
-    JAVA_DEVELOPER("Java Developer", 50, JobType.REAL);
+    JAVA_DEVELOPER("Java Developer", 50, JobType.REAL),
+    KEBAB_ENGINEER("Kebab Engineer", 200, JobType.REAL),
+
+    DRUG_DEALER("Drug Dealer", 3, JobType.ILLEGAL);
 
     private final String name;
     private final int salary;
