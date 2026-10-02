@@ -6,6 +6,11 @@ public abstract class Scene {
 
     }
 
+    public void init()
+    {
+
+    }
+
     /// Takes care of updating scenes
     ///
     /// @param deltaTime

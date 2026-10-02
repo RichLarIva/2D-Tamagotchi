@@ -25,9 +25,9 @@ public class Window {
     private static Window window = null;
     private static Scene currentScene;
     private final float a;
-    private float r;
-    private float g;
-    private float b;
+    public float r;
+    public float g;
+    public float b;
     private int width, height;
     private String title;
     private long glfwWindow;
@@ -48,13 +48,14 @@ public class Window {
     }
 
     public static void changeScene(int newScene) {
-        switch (newScene)
-        {
+        switch (newScene) {
             case 0:
                 currentScene = new LevelEditorScene();
+                currentScene.init();
                 break;
             case 1:
                 currentScene = new LevelScene();
+                currentScene.init();
                 break;
             default:
                 assert false : "Unknown scene \"" + newScene + "\"";
@@ -62,8 +63,7 @@ public class Window {
     }
 
     public static Window get() {
-        if (Window.window == null)
-        {
+        if (Window.window == null) {
             Window.window = new Window();
         }
 
@@ -73,13 +73,11 @@ public class Window {
     private GLFWVidMode getSelectedMonitorMode() {
         PointerBuffer monitors = glfwGetMonitors();
 
-        if (monitors == null || monitors.remaining() == 0)
-        {
+        if (monitors == null || monitors.remaining() == 0) {
             throw new IllegalStateException("No monitors detected.");
         }
 
-        if (DEFAULT_MONITOR < 0 || DEFAULT_MONITOR >= monitors.remaining())
-        {
+        if (DEFAULT_MONITOR < 0 || DEFAULT_MONITOR >= monitors.remaining()) {
             throw new IllegalStateException(
                     "Invalid monitor index: " + DEFAULT_MONITOR +
                             ". Available monitors: " + monitors.remaining()
@@ -147,12 +145,10 @@ public class Window {
 
         String os = System.getProperty("os.name").toLowerCase();
 
-        if (os.contains("linux"))
-        {
+        if (os.contains("linux")) {
             glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
         }
-        if (!glfwInit())
-        {
+        if (!glfwInit()) {
             throw new IllegalStateException("Unable to initialize GLFW!");
         }
 
@@ -175,8 +171,7 @@ public class Window {
 
         PointerBuffer monitors = glfwGetMonitors();
 
-        if (monitors == null || monitors.remaining() == 0)
-        {
+        if (monitors == null || monitors.remaining() == 0) {
             throw new IllegalStateException("No monitors detected");
         }
 
@@ -184,8 +179,7 @@ public class Window {
 
         glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
 
-        if (glfwWindow == NULL)
-        {
+        if (glfwWindow == NULL) {
             throw new IllegalStateException("Failed to create the GLFW window.");
         }
 
@@ -218,17 +212,14 @@ public class Window {
                         NanoVGGL3.NVG_STENCIL_STROKES
         );
 
-        if (vg == NULL)
-        {
+        if (vg == NULL) {
             throw new RuntimeException("Failed to create NanoVG context");
         }
 
         // Load font
-        try (var inputStream = getClass().getResourceAsStream("/fonts/Comic Sans MS.ttf"))
-        {
+        try (var inputStream = getClass().getResourceAsStream("/fonts/Comic Sans MS.ttf")) {
 
-            if (inputStream == null)
-            {
+            if (inputStream == null) {
                 throw new RuntimeException("Font not found: /fonts/Comic Sans MS.ttf");
             }
 
@@ -246,13 +237,10 @@ public class Window {
                     tempFont.toAbsolutePath().toString()
             );
 
-            if (font == -1)
-            {
+            if (font == -1) {
                 throw new RuntimeException("Failed to load font");
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -271,7 +259,7 @@ public class Window {
 
         glfwSwapBuffers(glfwWindow);
         playerTamagotchi = new Tamagotchi("Felix");
-
+        Window.changeScene(0);
     }
 
     private void checkCornerHit(float x, float y) {
@@ -281,8 +269,7 @@ public class Window {
                         (x <= 0 && y + 100 >= height) || // bottom-left
                         (x + 100 >= width && y + 100 >= height); // bottom-right
 
-        if (inCorner && !wasInCorner)
-        {
+        if (inCorner && !wasInCorner) {
             dvdCornerHits++;
             System.out.println("DVD corner hits: " + dvdCornerHits);
         }
@@ -297,7 +284,8 @@ public class Window {
 
     public void loop() {
         float beginTime = Time.getTime();
-        float endTime = Time.getTime();
+        float endTime;
+        float deltaTime = -1.0f;
         String test = "";
         int previousKey = -1;
         int switchVsync = 0;
@@ -310,8 +298,7 @@ public class Window {
         float y2 = height / 2;
         float dx = 260, dy = 260;
 
-        while (!glfwWindowShouldClose(glfwWindow))
-        {
+        while (!glfwWindowShouldClose(glfwWindow)) {
             // poll events
             glfwPollEvents();
 
@@ -321,18 +308,21 @@ public class Window {
             glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT);
 
+            if (deltaTime >= 0) {
+                currentScene.update(deltaTime);
+            }
+
+
             double currentTime = System.currentTimeMillis();
             frames++;
 
-            if (currentTime - lastTime >= 1000)
-            {
+            if (currentTime - lastTime >= 1000) {
                 fps = frames;
                 frames = 0;
                 lastTime = currentTime;
 
             }
 
-            IO.println(randomJob());
 
             nvgBeginFrame(vg, width, height, 1);
 
@@ -346,26 +336,20 @@ public class Window {
             nvgText(vg, 0, 1000, "WIDTH: " + width + "Height:" + height);
             nvgText(vg, width / 2, 200, "Corner Hits: " + dvdCornerHits);
 
-            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE)) {
                 nvgText(vg, 100, 100, "SPACE KEY PRESSED");
             }
 
-            if (KeyListener.isKeyPressed(GLFW_KEY_F5))
-            {
-                if (switchVsync == 0)
-                {
+            if (KeyListener.isKeyPressed(GLFW_KEY_F5)) {
+                if (switchVsync == 0) {
                     glfwSwapInterval(1);
                     switchVsync = 1;
                     nvgText(vg, 800, 100, "VSYNC ON");
                 }
 
-            }
-            else if (KeyListener.isKeyPressed(GLFW_KEY_F6))
-            {
+            } else if (KeyListener.isKeyPressed(GLFW_KEY_F6)) {
 
-                if (switchVsync == 1)
-                {
+                if (switchVsync == 1) {
                     glfwSwapInterval(0);
                     switchVsync = 0;
                     nvgText(vg, 800, 100, "VSYNC OFF");
@@ -388,12 +372,10 @@ public class Window {
 //            }
 //
 //            previousKey = key;
-            if (playerTamagotchi.getFullLevel() > 0 && playerTamagotchi.getFunLevel() > -5)
-            {
+            if (playerTamagotchi.getFullLevel() > 0 && playerTamagotchi.getFunLevel() > -5) {
 
                 nvgTextBox(vg, 250, 600, width - 2 * 20, playerTamagotchi.toString() + "\nHäst");
-                switch (KeyListener.getKeyPressed())
-                {
+                switch (KeyListener.getKeyPressed()) {
                     case GLFW_KEY_1:
                         playerTamagotchi.increaseFun();
                         break;
@@ -401,35 +383,26 @@ public class Window {
                         playerTamagotchi.increaseFullness();
                         break;
                 }
-            }
-            else
-            {
+            } else {
                 color.r(1f).g(0f).b(0f).a(1f);
-                if (playerTamagotchi.getFunLevel() <= -5)
-                {
+                if (playerTamagotchi.getFunLevel() <= -5) {
                     nvgText(vg, 600, 600, playerTamagotchi.getName() + " SUICIDED");
-                }
-                else
-                {
+                } else {
                     nvgText(vg, 600, 600, playerTamagotchi.getName() + " DIED");
                 }
             }
 
-            if (KeyListener.isKeyPressed(GLFW_KEY_UP))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_UP)) {
                 tamaY -= 0.5f;
             }
-            if (KeyListener.isKeyPressed(GLFW_KEY_DOWN))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_DOWN)) {
                 tamaY += 0.5f;
             }
 
-            if (KeyListener.isKeyPressed(GLFW_KEY_RIGHT))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_RIGHT)) {
                 tamaX += 0.5f;
             }
-            if (KeyListener.isKeyPressed(GLFW_KEY_LEFT))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_LEFT)) {
                 tamaX -= 0.5f;
             }
             tamaX = Math.clamp(tamaX, 0, width - 200f);
@@ -441,8 +414,7 @@ public class Window {
             drawTamagotchi(tamaX, tamaY);
 
             nvgText(vg, 0, 900, test);
-            if (KeyListener.isKeyPressed(GLFW_KEY_F2))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_F2)) {
                 test = "";
             }
 
@@ -452,31 +424,22 @@ public class Window {
 
 
             glfwSwapBuffers(glfwWindow);
-            endTime = Time.getTime();
-
-            float deltaTime = endTime - beginTime;
 
 
             x2 += dx * deltaTime;
             y2 += dy * deltaTime;
 
-            if (x2 <= 0)
-            {
+            if (x2 <= 0) {
                 dx *= -1;
                 x2 = 0;
-            }
-            else if (x2 + 100f >= width)
-            {
+            } else if (x2 + 100f >= width) {
                 dx *= -1;
                 x2 = width - 100f;
             }
-            if (y2 <= 0)
-            {
+            if (y2 <= 0) {
                 dy *= -1;
                 y2 = 0;
-            }
-            else if (y2 + 100f >= height)
-            {
+            } else if (y2 + 100f >= height) {
                 y2 = height - 100f;
                 dy *= -1f;
             }
@@ -487,8 +450,7 @@ public class Window {
             boolean isColliding = (x2 < tamaX + 200 && x2 + 100 > tamaX) &&
                     (y2 < tamaY + 200 && y2 + 100 > tamaY);
 
-            if (isColliding)
-            {
+            if (isColliding) {
                 float overlapLeft = (x2 + 100) - tamaX;
                 float overlapRight = (tamaX + 200) - x2;
                 float overlapTop = (y2 + 100) - tamaY;
@@ -496,36 +458,31 @@ public class Window {
 
                 float minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));
 
-                if (minOverlap == overlapLeft)
-                {
+                if (minOverlap == overlapLeft) {
                     x2 = tamaX - 100;
                     dx = -Math.abs(dx);
-                }
-                else if (minOverlap == overlapRight)
-                {
+                } else if (minOverlap == overlapRight) {
                     x2 = tamaX + 200; // Push out of collision
                     dx = Math.abs(dx);      // Bounce right
-                }
-                else if (minOverlap == overlapTop)
-                {
+                } else if (minOverlap == overlapTop) {
                     y2 = tamaY - 100;
                     dy = -Math.abs(dy);
-                }
-                else if (minOverlap == overlapBottom)
-                {
+                } else if (minOverlap == overlapBottom) {
                     y2 = tamaY + 200;
                     dy = Math.abs(dy);
                 }
             }
 
-            if (tamaY != 929)
-            {
+            if (tamaY != 929) {
                 tamaY -= -9.81f * deltaTime * 20;
             }
+
+            endTime = Time.getTime();
+            deltaTime = endTime - beginTime;
             beginTime = endTime;
+
             KeyListener.endFrame();
-            if (KeyListener.isKeyPressed(GLFW_KEY_5))
-            {
+            if (KeyListener.isKeyPressed(GLFW_KEY_5)) {
                 glfwSetWindowShouldClose(glfwWindow, true);
             }
         }
