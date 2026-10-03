@@ -13,7 +13,7 @@ public class LevelEditorScene extends Scene {
     private final String vertexShaderSource =
             "#version 330 core\n" +
                     "layout (location = 0) in vec3 aPos;\n" +
-                    "layout (location = 0) in vec4 aColor;\n" +
+                    "layout (location = 1) in vec4 aColor;\n" +
                     "\n" +
                     "out vec4 fColor;\n" +
                     "\n" +
@@ -36,7 +36,7 @@ public class LevelEditorScene extends Scene {
                     "}";
 
     private final float[] vertexArray = {
-            // position         // color
+            // position                 // color
             0.5f, -0.5f, 0.0f,   /**/   1.0f, 0.0f, 0.0f, 1.0f, // Bottom Right 0
             -0.5f, 0.5f, 0.0f,   /**/   0.0f, 1.0f, 0.0f, 1.0f, // top left 1
             0.5f, 0.5f, 0.0f,    /**/   0.0f, 0.0f, 1.0f, 1.0f,  // Top right 2
