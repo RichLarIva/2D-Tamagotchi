@@ -1,4 +1,4 @@
-package se.zodiakengine.richard.GameInnards;
+package se.zodiakengine.richard.GameInnards.Scenes;
 
 public class LevelScene extends Scene {
 

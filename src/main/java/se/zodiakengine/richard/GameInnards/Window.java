@@ -4,27 +4,32 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
-import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.nanovg.NanoVGGL3;
 import org.lwjgl.opengl.GL;
-import se.zodiakengine.richard.Tamagotchi.JobStuff.Job;
+import se.zodiakengine.richard.GameInnards.Scenes.LevelEditorScene;
+import se.zodiakengine.richard.GameInnards.Scenes.LevelScene;
+import se.zodiakengine.richard.GameInnards.Scenes.Scene;
+import se.zodiakengine.richard.GameInnards.Scenes.TamagotchiScene;
 import se.zodiakengine.richard.Tamagotchi.Tamagotchi;
 import se.zodiakengine.richard.Utils.Time;
 
-import java.util.Random;
-
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.nanovg.NanoVG.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
+    private static final int SCENES_MAX_INTEGER = 3;
     private static final int DEFAULT_MONITOR = 0;
     private static Window window = null;
     private static Scene currentScene;
     private final float a;
+    private final double lastTime = System.currentTimeMillis();
+    private final int fps = 0;
+    private final int frames = 0;
+    private final int dvdCornerHits = 0;
+    private final boolean wasInCorner = false;
     public float r;
     public float g;
     public float b;
@@ -32,12 +37,7 @@ public class Window {
     private String title;
     private long glfwWindow;
     private long vg;
-    private double lastTime = System.currentTimeMillis();
-    private int fps = 0;
-    private int frames = 0;
     private Tamagotchi playerTamagotchi;
-    private int dvdCornerHits = 0;
-    private boolean wasInCorner = false;
 
     private Window() {
         this.title = "Best Tamogotchi 2D";
@@ -55,6 +55,10 @@ public class Window {
                 break;
             case 1:
                 currentScene = new LevelScene();
+                currentScene.init();
+                break;
+            case 2:
+                currentScene = new TamagotchiScene();
                 currentScene.init();
                 break;
             default:
@@ -258,233 +262,44 @@ public class Window {
         });
 
         glfwSwapBuffers(glfwWindow);
-        playerTamagotchi = new Tamagotchi("Felix");
         Window.changeScene(0);
     }
 
-    private void checkCornerHit(float x, float y) {
-        boolean inCorner =
-                (x <= 0 && y <= 0) || // top-left
-                        (x + 100 >= width && y <= 0) || // top-right
-                        (x <= 0 && y + 100 >= height) || // bottom-left
-                        (x + 100 >= width && y + 100 >= height); // bottom-right
-
-        if (inCorner && !wasInCorner) {
-            dvdCornerHits++;
-            System.out.println("DVD corner hits: " + dvdCornerHits);
-        }
-
-        wasInCorner = inCorner;
-    }
-
-    private Job randomJob() {
-        int pick = new Random().nextInt(Job.values().length);
-        return Job.values()[pick];
-    }
 
     public void loop() {
         float beginTime = Time.getTime();
         float endTime;
         float deltaTime = -1.0f;
-        String test = "";
-        int previousKey = -1;
-        int switchVsync = 0;
-        NVGColor color = NVGColor.create();
-        color.r(0f).g(1f).b(0f).a(1f);
-        float tamaX = width / 2;
-        float tamaY = height / 2;
-        int bc = 5;
-        float x2 = width / 2;
-        float y2 = height / 2;
-        float dx = 260, dy = 260;
+        int sceneInt = 0;
+
 
         while (!glfwWindowShouldClose(glfwWindow)) {
-            // poll events
+
             glfwPollEvents();
 
-
-            //rgbScreen();
-
             glClearColor(r, g, b, a);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             if (deltaTime >= 0) {
                 currentScene.update(deltaTime);
             }
 
-
-            double currentTime = System.currentTimeMillis();
-            frames++;
-
-            if (currentTime - lastTime >= 1000) {
-                fps = frames;
-                frames = 0;
-                lastTime = currentTime;
-
-            }
-
-
-            nvgBeginFrame(vg, width, height, 1);
-
-            nvgFontSize(vg, 48f);
-            nvgFontFace(vg, "mono");
-
-
-            nvgFillColor(vg, color);
-
-            nvgText(vg, 0, 100, "FPS: " + fps);
-            nvgText(vg, 0, 1000, "WIDTH: " + width + "Height:" + height);
-            nvgText(vg, width / 2, 200, "Corner Hits: " + dvdCornerHits);
-
-            if (KeyListener.isKeyPressed(GLFW_KEY_SPACE)) {
-                nvgText(vg, 100, 100, "SPACE KEY PRESSED");
-            }
-
-            if (KeyListener.isKeyPressed(GLFW_KEY_F5)) {
-                if (switchVsync == 0) {
-                    glfwSwapInterval(1);
-                    switchVsync = 1;
-                    nvgText(vg, 800, 100, "VSYNC ON");
-                }
-
-            } else if (KeyListener.isKeyPressed(GLFW_KEY_F6)) {
-
-                if (switchVsync == 1) {
-                    glfwSwapInterval(0);
-                    switchVsync = 0;
-                    nvgText(vg, 800, 100, "VSYNC OFF");
-                }
-            }
-
-
-            drawDVDLOGO(x2, y2);
-
-
-            bc += bc << 5;
-            nvgText(vg, 600, 900, "" + bc);
-
-
-//            int key = KeyListener.getKeyPressed();
-//
-//            if(key != -1 && key != previousKey)
-//            {
-//                test += (char) key;
-//            }
-//
-//            previousKey = key;
-            if (playerTamagotchi.getFullLevel() > 0 && playerTamagotchi.getFunLevel() > -5) {
-
-                nvgTextBox(vg, 250, 600, width - 2 * 20, playerTamagotchi.toString() + "\nHäst");
-                switch (KeyListener.getKeyPressed()) {
-                    case GLFW_KEY_1:
-                        playerTamagotchi.increaseFun();
-                        break;
-                    case GLFW_KEY_2:
-                        playerTamagotchi.increaseFullness();
-                        break;
-                }
-            } else {
-                color.r(1f).g(0f).b(0f).a(1f);
-                if (playerTamagotchi.getFunLevel() <= -5) {
-                    nvgText(vg, 600, 600, playerTamagotchi.getName() + " SUICIDED");
-                } else {
-                    nvgText(vg, 600, 600, playerTamagotchi.getName() + " DIED");
-                }
-            }
-
-            if (KeyListener.isKeyPressed(GLFW_KEY_UP)) {
-                tamaY -= 0.5f;
-            }
-            if (KeyListener.isKeyPressed(GLFW_KEY_DOWN)) {
-                tamaY += 0.5f;
-            }
-
-            if (KeyListener.isKeyPressed(GLFW_KEY_RIGHT)) {
-                tamaX += 0.5f;
-            }
-            if (KeyListener.isKeyPressed(GLFW_KEY_LEFT)) {
-                tamaX -= 0.5f;
-            }
-            tamaX = Math.clamp(tamaX, 0, width - 200f);
-            tamaY = Math.clamp(tamaY, 0, height - 200f);
-
-            x2 = Math.clamp(x2, 0, width - 100f);
-            y2 = Math.clamp(y2, 0, height - 100f);
-
-            drawTamagotchi(tamaX, tamaY);
-
-            nvgText(vg, 0, 900, test);
-            if (KeyListener.isKeyPressed(GLFW_KEY_F2)) {
-                test = "";
-            }
-
-            nvgText(vg, 900, 50, "X:" + tamaX + " Y:" + tamaY);
-
-            nvgEndFrame(vg);
-
-
             glfwSwapBuffers(glfwWindow);
-
-
-            x2 += dx * deltaTime;
-            y2 += dy * deltaTime;
-
-            if (x2 <= 0) {
-                dx *= -1;
-                x2 = 0;
-            } else if (x2 + 100f >= width) {
-                dx *= -1;
-                x2 = width - 100f;
-            }
-            if (y2 <= 0) {
-                dy *= -1;
-                y2 = 0;
-            } else if (y2 + 100f >= height) {
-                y2 = height - 100f;
-                dy *= -1f;
-            }
-
-            checkCornerHit(x2, y2);
-
-
-            boolean isColliding = (x2 < tamaX + 200 && x2 + 100 > tamaX) &&
-                    (y2 < tamaY + 200 && y2 + 100 > tamaY);
-
-            if (isColliding) {
-                float overlapLeft = (x2 + 100) - tamaX;
-                float overlapRight = (tamaX + 200) - x2;
-                float overlapTop = (y2 + 100) - tamaY;
-                float overlapBottom = (tamaY + 200) - y2;
-
-                float minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));
-
-                if (minOverlap == overlapLeft) {
-                    x2 = tamaX - 100;
-                    dx = -Math.abs(dx);
-                } else if (minOverlap == overlapRight) {
-                    x2 = tamaX + 200; // Push out of collision
-                    dx = Math.abs(dx);      // Bounce right
-                } else if (minOverlap == overlapTop) {
-                    y2 = tamaY - 100;
-                    dy = -Math.abs(dy);
-                } else if (minOverlap == overlapBottom) {
-                    y2 = tamaY + 200;
-                    dy = Math.abs(dy);
-                }
-            }
-
-            if (tamaY != 929) {
-                tamaY -= -9.81f * deltaTime * 20;
-            }
 
             endTime = Time.getTime();
             deltaTime = endTime - beginTime;
             beginTime = endTime;
-
+            if (KeyListener.isKeyJustPressed(GLFW_KEY_6)) {
+                sceneInt++;
+                if (sceneInt >= SCENES_MAX_INTEGER)
+                    sceneInt = 0;
+                Window.changeScene(sceneInt);
+            }
             KeyListener.endFrame();
             if (KeyListener.isKeyPressed(GLFW_KEY_5)) {
                 glfwSetWindowShouldClose(glfwWindow, true);
             }
+
         }
     }
 
@@ -494,28 +309,7 @@ public class Window {
         b = 1.0f - r;
     }
 
-    private void drawTamagotchi(float x, float y) {
-        nvgBeginPath(vg);
-
-        nvgRect(vg, x, y, 200, 200);
-
-        NVGColor color = NVGColor.create()
-                .r(1.0f)
-                .g(0.5f)
-                .b(0.2f)
-                .a(1.0f);
-
-        nvgFillColor(vg, color);
-        nvgFill(vg);
-    }
-
-    private void drawDVDLOGO(float x, float y) {
-        nvgBeginPath(vg);
-        nvgRect(vg, x, y, 100, 100);
-
-        NVGColor color = NVGColor.create().r(0.0f).g(1).b(0).a(0.95f);
-
-        nvgFillColor(vg, color);
-        nvgFill(vg);
+    public long getVG() {
+        return vg;
     }
 }

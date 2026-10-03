@@ -1,4 +1,4 @@
-package se.zodiakengine.richard.GameInnards;
+package se.zodiakengine.richard.GameInnards.Scenes;
 
 import org.lwjgl.BufferUtils;
 
@@ -46,7 +46,7 @@ public class LevelEditorScene extends Scene {
     //IMPORTANT: MUST BE IN COUNTER-CLOCKWISE ORDER
     private final int[] elementArray = {
             2, 1, 0, // Top Right triangle
-            0, 1, 3 // Bottom left triangle
+            0, 1, 3, // Bottom left triangle
     };
 
     private int vertexID, fragmentID, shaderProgram;
@@ -66,14 +66,14 @@ public class LevelEditorScene extends Scene {
         // Pass the shader source to the GPU
         glShaderSource(vertexID, vertexShaderSource);
         glCompileShader(vertexID);
-
+        glEnable(GL_DEPTH_TEST);
         // Check for errors in compilation
         int success = glGetShaderi(vertexID, GL_COMPILE_STATUS);
         if (success == GL_FALSE) {
             int len = glGetShaderi(vertexID, GL_INFO_LOG_LENGTH);
             IO.println("ERROR WOOPSIES: 'defaultShader.glsl'\n\r\tVertex shader compilation failed.");
             IO.println(glGetShaderInfoLog(vertexID, len));
-            assert false : "";
+            throw new RuntimeException("Vertex Shader compilation failed:\n\r" + glGetShaderInfoLog(vertexID, len));
         }
 
         fragmentID = glCreateShader(GL_FRAGMENT_SHADER);

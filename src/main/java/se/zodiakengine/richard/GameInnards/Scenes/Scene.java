@@ -1,4 +1,4 @@
-package se.zodiakengine.richard.GameInnards;
+package se.zodiakengine.richard.GameInnards.Scenes;
 
 public abstract class Scene {
 
@@ -6,8 +6,7 @@ public abstract class Scene {
 
     }
 
-    public void init()
-    {
+    public void init() {
 
     }
 
@@ -15,4 +14,8 @@ public abstract class Scene {
     ///
     /// @param deltaTime
     public abstract void update(float deltaTime);
+
+    public void destroy() {
+
+    }
 }
