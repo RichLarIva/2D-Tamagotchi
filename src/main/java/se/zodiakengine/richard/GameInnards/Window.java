@@ -21,7 +21,6 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Window {
     private static final int SCENES_MAX_INTEGER = 3;
-    private static final int DEFAULT_MONITOR = 0;
     private static Window window = null;
     private static Scene currentScene;
     private final float a;
@@ -33,6 +32,7 @@ public class Window {
     public float r;
     public float g;
     public float b;
+    private int selectedMonitor = 0;
     private int width, height;
     private String title;
     private long glfwWindow;
@@ -48,7 +48,8 @@ public class Window {
     }
 
     public static void changeScene(int newScene) {
-        switch (newScene) {
+        switch (newScene)
+        {
             case 0:
                 currentScene = new LevelEditorScene();
                 currentScene.init();
@@ -67,7 +68,8 @@ public class Window {
     }
 
     public static Window get() {
-        if (Window.window == null) {
+        if (Window.window == null)
+        {
             Window.window = new Window();
         }
 
@@ -77,30 +79,33 @@ public class Window {
     private GLFWVidMode getSelectedMonitorMode() {
         PointerBuffer monitors = glfwGetMonitors();
 
-        if (monitors == null || monitors.remaining() == 0) {
+        if (monitors == null || monitors.remaining() == 0)
+        {
             throw new IllegalStateException("No monitors detected.");
         }
 
-        if (DEFAULT_MONITOR < 0 || DEFAULT_MONITOR >= monitors.remaining()) {
+        if (selectedMonitor < 0 || selectedMonitor >= monitors.remaining())
+        {
             throw new IllegalStateException(
-                    "Invalid monitor index: " + DEFAULT_MONITOR +
+                    "Invalid monitor index: " + selectedMonitor +
                             ". Available monitors: " + monitors.remaining()
             );
         }
 
-        long monitor = monitors.get(DEFAULT_MONITOR);
+        long monitor = monitors.get(selectedMonitor);
 
         String name = glfwGetMonitorName(monitor);
         GLFWVidMode mode = glfwGetVideoMode(monitor);
 
         IO.println(
-                "Starting on monitor " + DEFAULT_MONITOR +
+                "Starting on monitor " + selectedMonitor +
                         ": " + name +
                         " (" + mode.width() + "x" + mode.height() + ")"
         );
 
         return mode;
     }
+
 
     public int getWidth() {
         return width;
@@ -126,6 +131,52 @@ public class Window {
         this.title = title;
     }
 
+    private int chooseMonitor() {
+        PointerBuffer monitors = glfwGetMonitors();
+
+        if (monitors == null || monitors.remaining() == 0)
+        {
+            throw new IllegalStateException("No monitors detected.");
+        }
+
+        String[] monitorNames = new String[monitors.remaining()];
+
+        for (int i = 0; i < monitors.remaining(); i++)
+        {
+            long monitor = monitors.get(i);
+
+            String name = glfwGetMonitorName(monitor);
+            GLFWVidMode mode = glfwGetVideoMode(monitor);
+
+            monitorNames[i] = i + ": " + name +
+                    " (" + mode.width() + "x" + mode.height() + ")";
+        }
+
+        Object selected = javax.swing.JOptionPane.showInputDialog(
+                null,
+                "Which monitor do you want to use?",
+                "Select Monitor",
+                javax.swing.JOptionPane.QUESTION_MESSAGE,
+                null,
+                monitorNames,
+                monitorNames[0]
+        );
+
+        // User pressed Cancel
+        if (selected == null)
+        {
+            System.exit(0);
+        }
+
+        String selectedString = selected.toString();
+
+        // Get the index from "0: Monitor Name..."
+        return Integer.parseInt(
+                selectedString.substring(0, selectedString.indexOf(":"))
+        );
+    }
+
+
     public void run() {
         IO.println("Hello LWJGL" + Version.getVersion() + "!");
 
@@ -149,12 +200,16 @@ public class Window {
 
         String os = System.getProperty("os.name").toLowerCase();
 
-        if (os.contains("linux")) {
+        if (os.contains("linux"))
+        {
             glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
         }
-        if (!glfwInit()) {
+        if (!glfwInit())
+        {
             throw new IllegalStateException("Unable to initialize GLFW!");
         }
+
+        selectedMonitor = chooseMonitor();
 
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -175,15 +230,17 @@ public class Window {
 
         PointerBuffer monitors = glfwGetMonitors();
 
-        if (monitors == null || monitors.remaining() == 0) {
+        if (monitors == null || monitors.remaining() == 0)
+        {
             throw new IllegalStateException("No monitors detected");
         }
 
-        long monitor = monitors.get(DEFAULT_MONITOR);
+        long monitor = monitors.get(selectedMonitor);
 
         glfwWindow = glfwCreateWindow(width, height, title, NULL, NULL);
 
-        if (glfwWindow == NULL) {
+        if (glfwWindow == NULL)
+        {
             throw new IllegalStateException("Failed to create the GLFW window.");
         }
 
@@ -216,14 +273,17 @@ public class Window {
                         NanoVGGL3.NVG_STENCIL_STROKES
         );
 
-        if (vg == NULL) {
+        if (vg == NULL)
+        {
             throw new RuntimeException("Failed to create NanoVG context");
         }
 
         // Load font
-        try (var inputStream = getClass().getResourceAsStream("/fonts/Comic Sans MS.ttf")) {
+        try (var inputStream = getClass().getResourceAsStream("/fonts/Comic Sans MS.ttf"))
+        {
 
-            if (inputStream == null) {
+            if (inputStream == null)
+            {
                 throw new RuntimeException("Font not found: /fonts/Comic Sans MS.ttf");
             }
 
@@ -241,10 +301,13 @@ public class Window {
                     tempFont.toAbsolutePath().toString()
             );
 
-            if (font == -1) {
+            if (font == -1)
+            {
                 throw new RuntimeException("Failed to load font");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException(e);
         }
 
@@ -273,14 +336,16 @@ public class Window {
         int sceneInt = 0;
 
 
-        while (!glfwWindowShouldClose(glfwWindow)) {
+        while (!glfwWindowShouldClose(glfwWindow))
+        {
 
             glfwPollEvents();
 
             glClearColor(r, g, b, a);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            if (deltaTime >= 0) {
+            if (deltaTime >= 0)
+            {
                 currentScene.update(deltaTime);
             }
 
@@ -289,14 +354,18 @@ public class Window {
             endTime = Time.getTime();
             deltaTime = endTime - beginTime;
             beginTime = endTime;
-            if (KeyListener.isKeyJustPressed(GLFW_KEY_6)) {
+            if (KeyListener.isKeyJustPressed(GLFW_KEY_6))
+            {
                 sceneInt++;
                 if (sceneInt >= SCENES_MAX_INTEGER)
+                {
                     sceneInt = 0;
+                }
                 Window.changeScene(sceneInt);
             }
             KeyListener.endFrame();
-            if (KeyListener.isKeyPressed(GLFW_KEY_5)) {
+            if (KeyListener.isKeyPressed(GLFW_KEY_5))
+            {
                 glfwSetWindowShouldClose(glfwWindow, true);
             }
 

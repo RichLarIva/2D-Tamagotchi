@@ -38,9 +38,9 @@ public class LevelEditorScene extends Scene {
     private final float[] vertexArray = {
             // position                 // color
             0.5f, -0.5f, 0.0f,   /**/   1.0f, 0.0f, 0.0f, 1.0f, // Bottom Right 0
-            -0.5f, 0.5f, 0.0f,   /**/   0.0f, 1.0f, 0.0f, 1.0f, // top left 1
-            0.5f, 0.5f, 0.0f,    /**/   0.0f, 0.0f, 1.0f, 1.0f,  // Top right 2
-            -0.5f, -0.5f, 0.0f,  /**/   1.0f, 1.0f, 0.0f, 1.0f, // bottom left 3
+            -0.5f, 0.01f, 0.0f,   /**/   0.0f, 1.0f, 0.0f, 1.0f, // top left 1
+            0.15f, 0.5f, 0.0f,    /**/   0.0f, 0.0f, 1.0f, 1.0f,  // Top right 2
+            -0.5f, -0f, 0.0f,  /**/   1.0f, 1.0f, 0.0f, 1.0f, // bottom left 3
     };
 
     //IMPORTANT: MUST BE IN COUNTER-CLOCKWISE ORDER
@@ -69,7 +69,8 @@ public class LevelEditorScene extends Scene {
         glEnable(GL_DEPTH_TEST);
         // Check for errors in compilation
         int success = glGetShaderi(vertexID, GL_COMPILE_STATUS);
-        if (success == GL_FALSE) {
+        if (success == GL_FALSE)
+        {
             int len = glGetShaderi(vertexID, GL_INFO_LOG_LENGTH);
             IO.println("ERROR WOOPSIES: 'defaultShader.glsl'\n\r\tVertex shader compilation failed.");
             IO.println(glGetShaderInfoLog(vertexID, len));
@@ -83,7 +84,8 @@ public class LevelEditorScene extends Scene {
 
         // Check for errors in compilation
         success = glGetShaderi(fragmentID, GL_COMPILE_STATUS);
-        if (success == GL_FALSE) {
+        if (success == GL_FALSE)
+        {
             int len = glGetShaderi(fragmentID, GL_INFO_LOG_LENGTH);
             IO.println("ERROR WOOPSIES: 'defaultShader.glsl'\n\r\tFragment shader compilation failed.");
             IO.println(glGetShaderInfoLog(fragmentID, len));
@@ -98,7 +100,8 @@ public class LevelEditorScene extends Scene {
 
         //Check for linking errors
         success = glGetProgrami(shaderProgram, GL_LINK_STATUS);
-        if (success == GL_FALSE) {
+        if (success == GL_FALSE)
+        {
             int len = glGetProgrami(shaderProgram, GL_INFO_LOG_LENGTH);
             IO.println("ERROR WOOPSIES: 'defaultShader.glsl'\n\r\tLinking of shaders failed.");
             IO.println(glGetProgramInfoLog(shaderProgram));

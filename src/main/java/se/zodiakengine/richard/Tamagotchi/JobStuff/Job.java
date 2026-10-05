@@ -10,7 +10,8 @@ public enum Job {
     JAVA_DEVELOPER("Java Developer", 50, JobType.REAL),
     KEBAB_ENGINEER("Kebab Engineer", 200, JobType.REAL),
 
-    DRUG_DEALER("Drug Dealer", 3, JobType.ILLEGAL);
+    DRUG_DEALER("Drug Dealer", 3, JobType.ILLEGAL),
+    DISCORD_MOD("Discord Moderator", -10, JobType.SCAM);
 
     private final String name;
     private final int salary;
